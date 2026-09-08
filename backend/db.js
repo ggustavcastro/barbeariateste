@@ -14,7 +14,7 @@ const inicializarBanco = async () => {
     await client.query(`
       CREATE TABLE IF NOT EXISTS servicos (
         id SERIAL PRIMARY KEY,
-        nome VARCHAR(100) NOT NULL,
+        nome VARCHAR(100) NOT NULL UNIQUE,
         duracao_minutos INTEGER NOT NULL,
         valor DECIMAL(10,2) NOT NULL
       );
@@ -47,6 +47,8 @@ const inicializarBanco = async () => {
         "sess" JSON NOT NULL,
         "expire" TIMESTAMP NOT NULL
       );
+
+      -- Insere serviços SOMENTE se não existirem (UNIQUE + ON CONFLICT)
       INSERT INTO servicos (nome, duracao_minutos, valor)
       VALUES
         ('Corte social', 30, 25.00),
@@ -56,7 +58,7 @@ const inicializarBanco = async () => {
         ('Bigode', 5, 5.00),
         ('Cavanhaque', 5, 5.00),
         ('Barba', 30, 25.00)
-      ON CONFLICT DO NOTHING;
+      ON CONFLICT (nome) DO NOTHING;
     `);
     console.log('✅ Banco inicializado com sucesso! Tabelas prontas!');
   } catch (err) {

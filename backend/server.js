@@ -23,11 +23,11 @@ app.get("/api/teste-banco", async (req, res) => {
 });
 
 // ==================================================
-// 💈 SERVIÇOS
+// 💈 SERVIÇOS — SEM DUPLICATAS
 // ==================================================
 app.get('/api/servicos', async (req, res) => {
   try {
-    const resultado = await pool.query("SELECT * FROM servicos ORDER BY id");
+    const resultado = await pool.query("SELECT DISTINCT ON (nome) * FROM servicos ORDER BY nome, id");
     res.json(resultado.rows);
   } catch (erro) {
     res.status(500).json({ erro: erro.message });
@@ -58,7 +58,7 @@ app.get('/api/horarios', async (req, res) => {
 });
 
 // ==================================================
-// 📅 SALVAR AGENDAMENTO — ✅ CORRIGIDO!
+// 📅 SALVAR AGENDAMENTO
 // ==================================================
 app.post('/api/agendamentos', async (req, res) => {
   const { nome_cliente, telefone, lista_servicos, data_agendamento, horario_inicio, barbeiro } = req.body;
@@ -120,7 +120,7 @@ app.get('/api/agendamentos', async (req, res) => {
 });
 
 // ==================================================
-// 🔐 CADASTRO NO BANCO
+// 🔐 CADASTRO
 // ==================================================
 app.post('/api/cadastro', async (req, res) => {
   const { email, senha, nome, telefone } = req.body;
@@ -141,7 +141,7 @@ app.post('/api/cadastro', async (req, res) => {
 });
 
 // ==================================================
-// 🔐 LOGIN — ✅ Corrigido para carregar telefone
+// 🔐 LOGIN
 // ==================================================
 const USUARIO_BARBEIRO = {
   id: 1,
