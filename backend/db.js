@@ -63,9 +63,9 @@ const inicializarBanco = async () => {
         ('Barba', 30, 25.00)
       ON CONFLICT DO NOTHING;
     `);
-    console.log('✅ Banco inicializado com sucesso');
+    console.log('✅ Banco inicializado com sucesso! Tabelas prontas!');
   } catch (err) {
-    console.error('❌ Erro no banco:', err);
+    console.error('❌ Erro ao inicializar banco:', err);
   } finally {
     client.release();
   }
