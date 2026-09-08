@@ -61,7 +61,7 @@ app.get('/api/horarios', async (req, res) => {
 });
 
 // ==================================================
-// 📅 AGENDAMENTOS
+// 📅 SALVAR AGENDAMENTO
 // ==================================================
 app.post('/api/agendamentos', async (req, res) => {
   const { nome_cliente, telefone, servico_id, data, horario, barbeiro } = req.body;
@@ -70,13 +70,16 @@ app.post('/api/agendamentos', async (req, res) => {
   }
 
   try {
+    // Verifica se horário está ocupado
     const ocupado = await pool.query(
-      "SELECT * FROM agendamentos WHERE data_agendamento = $1 AND horario = $2", [data, horario]
+      "SELECT * FROM agendamentos WHERE data_agendamento = $1 AND horario = $2",
+      [data, horario]
     );
     if (ocupado.rows.length > 0) {
       return res.status(409).json({ sucesso: false, mensagem: "❌ Esse horário JÁ ESTÁ AGENDADO!" });
     }
 
+    // Salva no banco
     const novo = await pool.query(
       `INSERT INTO agendamentos (nome_cliente, telefone, servico_id, data_agendamento, horario, barbeiro)
        VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
@@ -88,11 +91,15 @@ app.post('/api/agendamentos', async (req, res) => {
   }
 });
 
+// ==================================================
+// 📋 LISTAR AGENDAMENTOS (AGORA SEM PRECISAR DE LOGIN!)
+// ==================================================
 app.get('/api/agendamentos', async (req, res) => {
   try {
     const resultado = await pool.query(`
       SELECT a.*, s.nome as nome_servico, s.valor 
-      FROM agendamentos a LEFT JOIN servicos s ON a.servico_id = s.id 
+      FROM agendamentos a 
+      LEFT JOIN servicos s ON a.servico_id = s.id 
       ORDER BY data_agendamento DESC, horario
     `);
     res.json(resultado.rows);
@@ -109,32 +116,23 @@ app.post('/api/cadastro', async (req, res) => {
   if (!email || !senha) return res.status(400).json({ erro: 'Email e senha obrigatórios' });
 
   try {
-    // Verifica se email já existe
     const existe = await pool.query("SELECT id FROM usuarios WHERE email = $1", [email.toLowerCase()]);
     if (existe.rows.length > 0) {
       return res.status(400).json({ erro: 'Email já cadastrado' });
     }
 
-    // Salva no banco → senha salva em senha_hash
     const novo = await pool.query(
-      `INSERT INTO usuarios (email, senha_hash, nome)
-       VALUES ($1, $2, $3) RETURNING id, email, nome`,
+      `INSERT INTO usuarios (email, senha_hash, nome) VALUES ($1, $2, $3) RETURNING id, email, nome`,
       [email.toLowerCase(), senha, nome]
     );
-
-    res.status(201).json({ 
-      id: novo.rows[0].id, 
-      email: novo.rows[0].email, 
-      nome: novo.rows[0].nome,
-      is_barbeiro: false 
-    });
+    res.status(201).json({ id: novo.rows[0].id, email: novo.rows[0].email, nome: novo.rows[0].nome, is_barbeiro: false });
   } catch (erro) {
     res.status(500).json({ erro: erro.message });
   }
 });
 
 // ==================================================
-// 🔐 LOGIN NO BANCO
+// 🔐 LOGIN
 // ==================================================
 const USUARIO_BARBEIRO = {
   id: 1,
@@ -151,48 +149,37 @@ app.post('/api/login', async (req, res) => {
   const { email, senha } = req.body;
   const emailLower = email.toLowerCase();
 
-  // 🔹 Login do Barbeiro (fixo por enquanto)
-  if (USUARIO_BARBEIRO.email.toLowerCase() === emailLower && 
-      USUARIO_BARBEIRO.senha === senha) {
+  // Login do Barbeiro
+  if (USUARIO_BARBEIRO.email.toLowerCase() === emailLower && USUARIO_BARBEIRO.senha === senha) {
     SESSAO.logado = true;
-    SESSAO.usuario = { 
-      id: USUARIO_BARBEIRO.id, 
-      email: USUARIO_BARBEIRO.email, 
-      nome: USUARIO_BARBEIRO.nome,
-      telefone: USUARIO_BARBEIRO.telefone,
-      is_barbeiro: true
-    };
+    SESSAO.usuario = { id: USUARIO_BARBEIRO.id, email: USUARIO_BARBEIRO.email, nome: USUARIO_BARBEIRO.nome, telefone: USUARIO_BARBEIRO.telefone, is_barbeiro: true };
     return res.json({ ok: true, usuario: SESSAO.usuario });
   }
 
-  // 🔹 Login do Cliente → BUSCA NO BANCO!
+  // Login do Cliente
   try {
-    const resultado = await pool.query(
-      "SELECT id, email, nome, senha_hash FROM usuarios WHERE email = $1",
-      [emailLower]
-    );
-
-    if (resultado.rows.length > 0) {
+    const resultado = await pool.query("SELECT id, email, nome, senha_hash FROM usuarios WHERE email = $1", [emailLower]);
+    if (resultado.rows.length > 0 && resultado.rows[0].senha_hash === senha) {
       const u = resultado.rows[0];
-      // Compara a senha digitada com a salva no banco
-      if (u.senha_hash === senha) {
-        SESSAO.logado = true;
-        SESSAO.usuario = { 
-          id: u.id, 
-          email: u.email, 
-          nome: u.nome,
-          telefone: '',
-          is_barbeiro: false
-        };
-        return res.json({ ok: true, usuario: SESSAO.usuario });
-      }
+      SESSAO.logado = true;
+      SESSAO.usuario = { id: u.id, email: u.email, nome: u.nome, telefone: '', is_barbeiro: false };
+      return res.json({ ok: true, usuario: SESSAO.usuario });
     }
-
-    // Se chegou aqui → não achou ou senha errada
     return res.status(401).json({ erro: 'Credenciais inválidas' });
-
   } catch (erro) {
     return res.status(500).json({ erro: erro.message });
+  }
+});
+
+// ==================================================
+// 📊 VER USUÁRIOS
+// ==================================================
+app.get('/api/usuarios', async (req, res) => {
+  try {
+    const resultado = await pool.query("SELECT id, email, nome, criado_em FROM usuarios ORDER BY id");
+    res.json(resultado.rows);
+  } catch (erro) {
+    res.status(500).json({ erro: erro.message });
   }
 });
 
@@ -203,16 +190,9 @@ app.post('/api/logout', (req, res) => {
   res.json({ ok: true });
 });
 
-app.post('/api/recuperar-senha', (req, res) => {
-  res.json({ ok: true, mensagem: 'Função disponível em breve' });
-});
-app.post('/api/redefinir-senha', (req, res) => {
-  res.json({ ok: true, mensagem: 'Função disponível em breve' });
-});
+app.post('/api/recuperar-senha', (req, res) => res.json({ ok: true, mensagem: 'Função disponível em breve' }));
+app.post('/api/redefinir-senha', (req, res) => res.json({ ok: true, mensagem: 'Função disponível em breve' }));
 
-// ==================================================
-// 🚀 INICIAR SERVIDOR
-// ==================================================
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
   console.log(`💈 Barbeiro: barbeiro@barbearia.com / 123456`);
