@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Corte & Estilo - Barbearia</title>
-    <!-- ✅ Caminho CERTO (está na mesma pasta) -->
-<link rel="stylesheet" href="style.css?v=2">
+    <!-- ✅ Caminho correto + quebra cache -->
+    <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 
-    <!-- Seu conteúdo da página inicial aqui -->
-    <header>
-        <h1>CORTE & ESTILO</h1>
+    <!-- ✅ Navbar com a classe correta do CSS -->
+    <header class="navbar">
+        <div class="logo">CORTE & ESTILO</div>
         <nav>
             <a href="paginas/inicio.html">Início</a>
             <a href="paginas/agendar.html">Agendar</a>
@@ -19,13 +19,13 @@
         </nav>
     </header>
 
-    <main>
+    <!-- ✅ Conteúdo principal -->
+    <main class="conteudo">
         <h2>Bem-vindo à Barbearia Corte & Estilo</h2>
         <p>Estilo e tradição em cada corte.</p>
         <a href="paginas/agendar.html" class="btn">Agendar Atendimento</a>
     </main>
 
-    <!-- ✅ Caminho CERTO -->
     <script src="app.js"></script>
 </body>
 </html>
