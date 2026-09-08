@@ -1,7 +1,4 @@
-// ✅ IMPORTAÇÃO CORRIGIDA com chaves {}
 const { pool, inicializarBanco } = require('./db');
-
-// ✅ CRIA AS TABELAS AUTOMATICAMENTE ao ligar o servidor
 inicializarBanco();
 
 const express = require('express');
@@ -16,26 +13,19 @@ app.use(express.json());
 app.use(express.static('../frontend'));
 
 // ==================================================
-// 🧪 TESTE DE CONEXÃO COM O BANCO
+// 🧪 TESTE DE CONEXÃO
 // ==================================================
 app.get("/api/teste-banco", async (req, res) => {
   try {
     const resultado = await pool.query("SELECT NOW() AS hora");
-    res.json({
-      conectado: true,
-      mensagem: "✅ Banco conectado com sucesso!",
-      hora_banco: resultado.rows[0].hora
-    });
+    res.json({ conectado: true, mensagem: "✅ Banco conectado!", hora_banco: resultado.rows[0].hora });
   } catch (erro) {
-    res.json({
-      conectado: false,
-      erro: erro.message
-    });
+    res.json({ conectado: false, erro: erro.message });
   }
 });
 
 // ==================================================
-// 💈 ROTAS DE SERVIÇOS
+// 💈 SERVIÇOS
 // ==================================================
 app.get('/api/servicos', async (req, res) => {
   try {
@@ -47,12 +37,10 @@ app.get('/api/servicos', async (req, res) => {
 });
 
 // ==================================================
-// ⏰ ROTA DE HORÁRIOS DISPONÍVEIS
+// ⏰ HORÁRIOS
 // ==================================================
 app.get('/api/horarios', async (req, res) => {
   const { data } = req.query;
-
-  // Horários de funcionamento: 08:00 às 18:30, de 30 em 30 minutos
   const todosHorarios = [
     "08:00", "08:30", "09:00", "09:30", "10:00", "10:30",
     "11:00", "11:30", "12:00", "12:30", "13:00", "13:30",
@@ -61,71 +49,40 @@ app.get('/api/horarios', async (req, res) => {
   ];
 
   try {
-    // Busca horários JÁ AGENDADOS nessa data
     const ocupados = await pool.query(
-      "SELECT horario FROM agendamentos WHERE data_agendamento = $1",
-      [data]
+      "SELECT horario FROM agendamentos WHERE data_agendamento = $1", [data]
     );
-
     const listaOcupados = ocupados.rows.map(h => h.horario.slice(0, 5));
-
-    // Filtra apenas os horários LIVRES
     const disponiveis = todosHorarios.filter(h => !listaOcupados.includes(h));
-
-    res.json({
-      todos: todosHorarios,
-      ocupados: listaOcupados,
-      disponiveis: disponiveis
-    });
-
+    res.json({ todos: todosHorarios, ocupados: listaOcupados, disponiveis });
   } catch (erro) {
-    console.error("❌ Erro ao buscar horários:", erro.message);
-    // Se der erro, retorna TODOS os horários como disponíveis
-    res.json({
-      todos: todosHorarios,
-      ocupados: [],
-      disponiveis: todosHorarios
-    });
+    res.json({ todos: todosHorarios, ocupados: [], disponiveis: todosHorarios });
   }
 });
 
 // ==================================================
-// 📅 ROTAS DE AGENDAMENTOS (com VALIDAÇÃO DE HORÁRIO)
+// 📅 AGENDAMENTOS
 // ==================================================
 app.post('/api/agendamentos', async (req, res) => {
   const { nome_cliente, telefone, servico_id, data, horario, barbeiro } = req.body;
-
   if (!nome_cliente || !telefone || !servico_id || !data || !horario) {
     return res.status(400).json({ erro: 'Preencha todos os campos!' });
   }
 
   try {
-    // 🔍 VERIFICA SE O HORÁRIO JÁ ESTÁ OCUPADO
-    const horarioOcupado = await pool.query(
-      "SELECT * FROM agendamentos WHERE data_agendamento = $1 AND horario = $2",
-      [data, horario]
+    const ocupado = await pool.query(
+      "SELECT * FROM agendamentos WHERE data_agendamento = $1 AND horario = $2", [data, horario]
     );
-
-    if (horarioOcupado.rows.length > 0) {
-      return res.status(409).json({
-        sucesso: false,
-        mensagem: "❌ Esse horário JÁ ESTÁ AGENDADO! Escolha outro horário."
-      });
+    if (ocupado.rows.length > 0) {
+      return res.status(409).json({ sucesso: false, mensagem: "❌ Esse horário JÁ ESTÁ AGENDADO!" });
     }
 
-    // ✅ SALVA NO BANCO
-    const novoAgendamento = await pool.query(
+    const novo = await pool.query(
       `INSERT INTO agendamentos (nome_cliente, telefone, servico_id, data_agendamento, horario, barbeiro)
        VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
       [nome_cliente, telefone, servico_id, data, horario, barbeiro || 'Barbeiro Eduardo']
     );
-
-    res.status(201).json({
-      sucesso: true,
-      mensagem: "✅ Agendamento CONFIRMADO com sucesso!",
-      agendamento: novoAgendamento.rows[0]
-    });
-
+    res.status(201).json({ sucesso: true, mensagem: "✅ Agendamento CONFIRMADO!", agendamento: novo.rows[0] });
   } catch (erro) {
     res.status(500).json({ erro: erro.message });
   }
@@ -135,8 +92,7 @@ app.get('/api/agendamentos', async (req, res) => {
   try {
     const resultado = await pool.query(`
       SELECT a.*, s.nome as nome_servico, s.valor 
-      FROM agendamentos a 
-      LEFT JOIN servicos s ON a.servico_id = s.id 
+      FROM agendamentos a LEFT JOIN servicos s ON a.servico_id = s.id 
       ORDER BY data_agendamento DESC, horario
     `);
     res.json(resultado.rows);
@@ -146,7 +102,39 @@ app.get('/api/agendamentos', async (req, res) => {
 });
 
 // ==================================================
-// 🔐 SISTEMA DE LOGIN E CADASTRO
+// 🔐 CADASTRO NO BANCO
+// ==================================================
+app.post('/api/cadastro', async (req, res) => {
+  const { email, senha, nome, telefone } = req.body;
+  if (!email || !senha) return res.status(400).json({ erro: 'Email e senha obrigatórios' });
+
+  try {
+    // Verifica se email já existe
+    const existe = await pool.query("SELECT id FROM usuarios WHERE email = $1", [email.toLowerCase()]);
+    if (existe.rows.length > 0) {
+      return res.status(400).json({ erro: 'Email já cadastrado' });
+    }
+
+    // Salva no banco → senha salva em senha_hash
+    const novo = await pool.query(
+      `INSERT INTO usuarios (email, senha_hash, nome)
+       VALUES ($1, $2, $3) RETURNING id, email, nome`,
+      [email.toLowerCase(), senha, nome]
+    );
+
+    res.status(201).json({ 
+      id: novo.rows[0].id, 
+      email: novo.rows[0].email, 
+      nome: novo.rows[0].nome,
+      is_barbeiro: false 
+    });
+  } catch (erro) {
+    res.status(500).json({ erro: erro.message });
+  }
+});
+
+// ==================================================
+// 🔐 LOGIN NO BANCO
 // ==================================================
 const USUARIO_BARBEIRO = {
   id: 1,
@@ -157,34 +145,13 @@ const USUARIO_BARBEIRO = {
   is_barbeiro: true
 };
 
-let USUARIOS_NOVOS = [];
 let SESSAO = { logado: false, usuario: null };
 
-app.post('/api/cadastro', (req, res) => {
-  const { email, senha, nome, telefone } = req.body;
-  if (!email || !senha) return res.status(400).json({ erro: 'Email e senha obrigatórios' });
-  
-  const existe = USUARIOS_NOVOS.find(u => u.email.toLowerCase() === email.toLowerCase()) ||
-                 USUARIO_BARBEIRO.email.toLowerCase() === email.toLowerCase();
-  if (existe) return res.status(400).json({ erro: 'Email já cadastrado' });
-  
-  const novo = {
-    id: USUARIOS_NOVOS.length + 2,
-    email: email.toLowerCase(),
-    senha: senha,
-    nome,
-    telefone,
-    is_barbeiro: false
-  };
-  USUARIOS_NOVOS.push(novo);
-  res.status(201).json({ id: novo.id, email: novo.email, nome: novo.nome, is_barbeiro: novo.is_barbeiro });
-});
-
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
   const { email, senha } = req.body;
   const emailLower = email.toLowerCase();
 
-  // Login do barbeiro
+  // 🔹 Login do Barbeiro (fixo por enquanto)
   if (USUARIO_BARBEIRO.email.toLowerCase() === emailLower && 
       USUARIO_BARBEIRO.senha === senha) {
     SESSAO.logado = true;
@@ -198,21 +165,35 @@ app.post('/api/login', (req, res) => {
     return res.json({ ok: true, usuario: SESSAO.usuario });
   }
 
-  // Login do cliente
-  const usuario = USUARIOS_NOVOS.find(u => u.email.toLowerCase() === emailLower);
-  if (usuario && usuario.senha === senha) {
-    SESSAO.logado = true;
-    SESSAO.usuario = { 
-      id: usuario.id, 
-      email: usuario.email, 
-      nome: usuario.nome,
-      telefone: usuario.telefone,
-      is_barbeiro: false
-    };
-    return res.json({ ok: true, usuario: SESSAO.usuario });
-  }
+  // 🔹 Login do Cliente → BUSCA NO BANCO!
+  try {
+    const resultado = await pool.query(
+      "SELECT id, email, nome, senha_hash FROM usuarios WHERE email = $1",
+      [emailLower]
+    );
 
-  return res.status(401).json({ erro: 'Credenciais inválidas' });
+    if (resultado.rows.length > 0) {
+      const u = resultado.rows[0];
+      // Compara a senha digitada com a salva no banco
+      if (u.senha_hash === senha) {
+        SESSAO.logado = true;
+        SESSAO.usuario = { 
+          id: u.id, 
+          email: u.email, 
+          nome: u.nome,
+          telefone: '',
+          is_barbeiro: false
+        };
+        return res.json({ ok: true, usuario: SESSAO.usuario });
+      }
+    }
+
+    // Se chegou aqui → não achou ou senha errada
+    return res.status(401).json({ erro: 'Credenciais inválidas' });
+
+  } catch (erro) {
+    return res.status(500).json({ erro: erro.message });
+  }
 });
 
 app.get('/api/eu', (req, res) => res.json(SESSAO));
