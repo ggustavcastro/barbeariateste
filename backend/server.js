@@ -140,3 +140,19 @@ app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
   console.log(`💈 Barbeiro: barbeiro@barbearia.com / 123456`);
 });
+// TESTE DE CONEXÃO COM O BANCO
+app.get("/api/teste-banco", async (req, res) => {
+  try {
+    const resultado = await pool.query("SELECT NOW() AS hora");
+    res.json({
+      conectado: true,
+      mensagem: "✅ Banco conectado com sucesso!",
+      hora_banco: resultado.rows[0].hora
+    });
+  } catch (erro) {
+    res.json({
+      conectado: false,
+      erro: erro.message
+    });
+  }
+});
