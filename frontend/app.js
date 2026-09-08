@@ -1,5 +1,21 @@
 const API_URL = window.location.origin;
-
+// Garante que carrega os serviços corretamente
+async function carregarServicosSelect() {
+  try {
+    const res = await fetch(`${API_URL}/api/servicos`);
+    if (!res.ok) throw new Error('Erro ao carregar serviços');
+    listaServicos = await res.json();
+    console.log('✅ Serviços carregados:', listaServicos); // ← Ajuda a debugar
+    const select = document.getElementById('servico');
+    if (select) {
+      select.innerHTML = '<option value="">Selecione um serviço...</option>' +
+        listaServicos.map(s => `<option value="${s.id}" data-nome="${s.nome}" data-duracao="${s.duracao_minutos}" data-valor="${s.valor}">${s.nome} — R$ ${s.valor.toFixed(2)} (${s.duracao_minutos}min)</option>`).join('');
+    }
+  } catch (erro) {
+    console.error('❌ Falha ao carregar serviços:', erro);
+    alert('Não foi possível carregar os serviços. Recarregue a página.');
+  }
+}
 // === SEM IMAGEM DE FUNDO DA PÁGINA ===
 (function definirImagemFundo() {
   const estilo = document.createElement('style');
