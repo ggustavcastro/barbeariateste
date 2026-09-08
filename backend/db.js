@@ -1,6 +1,5 @@
 const { Pool } = require('pg');
 require('dotenv').config();
-
 const isProduction = !!process.env.DATABASE_URL;
 
 const pool = new Pool({
@@ -35,20 +34,6 @@ const inicializarBanco = async () => {
         nome VARCHAR(100),
         criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
-      CREATE TABLE IF NOT EXISTS recuperacao_senha (
-        id SERIAL PRIMARY KEY,
-        usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
-        token VARCHAR(255) UNIQUE NOT NULL,
-        expira_em TIMESTAMP NOT NULL,
-        usado BOOLEAN DEFAULT false
-      );
-      CREATE TABLE IF NOT EXISTS "session" (
-        "sid" VARCHAR NOT NULL PRIMARY KEY,
-        "sess" JSON NOT NULL,
-        "expire" TIMESTAMP NOT NULL
-      );
-
-      -- Insere serviços SOMENTE se não existirem (UNIQUE + ON CONFLICT)
       INSERT INTO servicos (nome, duracao_minutos, valor)
       VALUES
         ('Corte social', 30, 25.00),
@@ -60,9 +45,9 @@ const inicializarBanco = async () => {
         ('Barba', 30, 25.00)
       ON CONFLICT (nome) DO NOTHING;
     `);
-    console.log('✅ Banco inicializado com sucesso! Tabelas prontas!');
+    console.log('✅ Banco inicializado!');
   } catch (err) {
-    console.error('❌ Erro ao inicializar banco:', err);
+    console.error('❌ Erro banco:', err);
   } finally {
     client.release();
   }

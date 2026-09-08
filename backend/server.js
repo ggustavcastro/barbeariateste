@@ -2,7 +2,7 @@ const { pool, inicializarBanco } = require('./db');
 inicializarBanco();
 const express = require('express');
 const cors = require('cors');
-const path = require('path'); // ✅ Adicionado
+const path = require('path');
 require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 54321;
@@ -10,15 +10,15 @@ const PORT = process.env.PORT || 54321;
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
-// ✅ CORRIGIDO: Aponta para a pasta frontend corretamente
+// Arquivos estáticos da pasta frontend
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// ✅ Rota raiz carrega index.html
+// Página inicial
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
-// ✅ Rota para as páginas dentro de /paginas/
+// Páginas dentro da subpasta paginas
 app.get('/paginas/:pagina', (req, res) => {
   res.sendFile(path.join(__dirname, `../frontend/paginas/${req.params.pagina}`));
 });
@@ -36,7 +36,7 @@ app.get("/api/teste-banco", async (req, res) => {
 });
 
 // ==================================================
-// 💈 SERVIÇOS — SEM DUPLICATAS
+// 💈 SERVIÇOS
 // ==================================================
 app.get('/api/servicos', async (req, res) => {
   try {
@@ -75,11 +75,9 @@ app.get('/api/horarios', async (req, res) => {
 // ==================================================
 app.post('/api/agendamentos', async (req, res) => {
   const { nome_cliente, telefone, lista_servicos, data_agendamento, horario_inicio, barbeiro } = req.body;
-
   if (!nome_cliente || !lista_servicos || !data_agendamento || !horario_inicio) {
     return res.status(400).json({ erro: 'Preencha data, horário e pelo menos um serviço!' });
   }
-
   try {
     const ocupado = await pool.query(
       "SELECT * FROM agendamentos WHERE data_agendamento = $1 AND horario = $2",
@@ -88,16 +86,13 @@ app.post('/api/agendamentos', async (req, res) => {
     if (ocupado.rows.length > 0) {
       return res.status(409).json({ sucesso: false, mensagem: "❌ Esse horário JÁ ESTÁ AGENDADO!" });
     }
-
     const primeiroServico = lista_servicos[0];
     const servico_id = primeiroServico?.id || 1;
-
     const novo = await pool.query(
       `INSERT INTO agendamentos (nome_cliente, telefone, servico_id, data_agendamento, horario, barbeiro)
        VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
       [nome_cliente, telefone || 'Não informado', servico_id, data_agendamento, horario_inicio, barbeiro || 'Barbeiro Eduardo']
     );
-
     res.status(201).json({ sucesso: true, mensagem: "✅ Agendamento CONFIRMADO!", agendamento: novo.rows[0] });
   } catch (erro) {
     console.error('❌ Erro ao salvar:', erro);
@@ -159,19 +154,11 @@ let SESSAO = { logado: false, usuario: null };
 app.post('/api/login', async (req, res) => {
   const { email, senha } = req.body;
   const emailLower = email.toLowerCase();
-
   if (USUARIO_BARBEIRO.email.toLowerCase() === emailLower && USUARIO_BARBEIRO.senha === senha) {
     SESSAO.logado = true;
-    SESSAO.usuario = { 
-      id: USUARIO_BARBEIRO.id, 
-      email: USUARIO_BARBEIRO.email, 
-      nome: USUARIO_BARBEIRO.nome, 
-      telefone: USUARIO_BARBEIRO.telefone, 
-      is_barbeiro: true 
-    };
+    SESSAO.usuario = { id: USUARIO_BARBEIRO.id, email: USUARIO_BARBEIRO.email, nome: USUARIO_BARBEIRO.nome, telefone: USUARIO_BARBEIRO.telefone, is_barbeiro: true };
     return res.json({ ok: true, usuario: SESSAO.usuario });
   }
-
   try {
     const resultado = await pool.query("SELECT id, email, nome, senha_hash FROM usuarios WHERE email = $1", [emailLower]);
     if (resultado.rows.length > 0 && resultado.rows[0].senha_hash === senha) {
@@ -186,9 +173,6 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// ==================================================
-// 📊 VER USUÁRIOS
-// ==================================================
 app.get('/api/usuarios', async (req, res) => {
   try {
     const resultado = await pool.query("SELECT id, email, nome, criado_em FROM usuarios ORDER BY id");
@@ -197,7 +181,6 @@ app.get('/api/usuarios', async (req, res) => {
     res.status(500).json({ erro: erro.message });
   }
 });
-
 app.get('/api/eu', (req, res) => res.json(SESSAO));
 app.post('/api/logout', (req, res) => {
   SESSAO.logado = false;

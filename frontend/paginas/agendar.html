@@ -1,36 +1,45 @@
-<section class="pagina-formulario">
-  <div class="caixa-formulario">
-    <h2>Agendar Atendimento</h2>
-    <form id="form-agendar">
-      <p style="margin-bottom:1rem; color:#94a3b8;">Agendando como: <strong id="nome-usuario"></strong></p>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendar Atendimento - Corte & Estilo</title>
+    <!-- ✅ Caminho CERTO (usa ../ para voltar uma pasta) -->
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
 
-      <div id="area-procedimentos">
-        <div class="linha-procedimento">
-          <label>Procedimento:</label>
-          <select id="servico" name="servico">
-            <option value="">Selecione um serviço...</option>
-          </select>
-        </div>
-        <div id="procedimentos-adicionados"></div>
-        <button type="button" id="btn-adicionar" style="margin:0.8rem 0; padding:0.5rem 1rem; background:#4f46e5; color:white; border:none; border-radius:6px; cursor:pointer;">➕ Adicionar Procedimento</button>
-      </div>
+    <header>
+        <h1>AGENDAR ATENDIMENTO</h1>
+        <a href="../index.html" class="voltar">← Voltar</a>
+    </header>
 
-      <label>Data:</label>
-      <input type="date" id="data_agendamento" name="data_agendamento" 
-             onkeydown="return false" onclick="this.showPicker()" required>
+    <main>
+        <form id="form-agendamento">
+            <label>Seu Nome:</label>
+            <input type="text" id="nome" required placeholder="Digite seu nome">
 
-      <label>Horário de início:</label>
-      <select id="horario" name="horario" required>
-        <option value="">Selecione um horário...</option>
-      </select>
+            <label>Telefone:</label>
+            <input type="tel" id="telefone" required placeholder="(00) 00000-0000">
 
-      <p style="color:#94a3b8; font-size:0.9rem; margin-top:0.5rem;">
-        Duração total: <strong id="duracao-total">0 min</strong> | 
-        Término previsto: <strong id="horario-termino">--:--</strong>
-      </p>
+            <label>Procedimento:</label>
+            <select id="servico" required>
+                <option value="">Carregando serviços...</option>
+            </select>
 
-      <button type="submit" id="btn-agendar">✅ Confirmar Agendamento</button>
-    </form>
-    <div class="link"><a href="#/" onclick="navegar('/')">← Voltar para a página inicial</a></div>
-  </div>
-</section>
+            <label>Data:</label>
+            <input type="date" id="data" required>
+
+            <label>Horário de Início:</label>
+            <select id="horario" required>
+                <option value="">Selecione um horário...</option>
+            </select>
+
+            <button type="submit" class="btn">Confirmar Agendamento</button>
+        </form>
+    </main>
+
+    <!-- ✅ Caminho CERTO -->
+    <script src="../app.js"></script>
+</body>
+</html>
