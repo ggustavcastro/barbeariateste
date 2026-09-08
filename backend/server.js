@@ -47,6 +47,49 @@ app.get('/api/servicos', async (req, res) => {
 });
 
 // ==================================================
+// ⏰ ROTA DE HORÁRIOS DISPONÍVEIS
+// ==================================================
+app.get('/api/horarios', async (req, res) => {
+  const { data } = req.query;
+
+  // Horários de funcionamento: 08:00 às 18:30, de 30 em 30 minutos
+  const todosHorarios = [
+    "08:00", "08:30", "09:00", "09:30", "10:00", "10:30",
+    "11:00", "11:30", "12:00", "12:30", "13:00", "13:30",
+    "14:00", "14:30", "15:00", "15:30", "16:00", "16:30",
+    "17:00", "17:30", "18:00", "18:30"
+  ];
+
+  try {
+    // Busca horários JÁ AGENDADOS nessa data
+    const ocupados = await pool.query(
+      "SELECT horario FROM agendamentos WHERE data_agendamento = $1",
+      [data]
+    );
+
+    const listaOcupados = ocupados.rows.map(h => h.horario.slice(0, 5));
+
+    // Filtra apenas os horários LIVRES
+    const disponiveis = todosHorarios.filter(h => !listaOcupados.includes(h));
+
+    res.json({
+      todos: todosHorarios,
+      ocupados: listaOcupados,
+      disponiveis: disponiveis
+    });
+
+  } catch (erro) {
+    console.error("❌ Erro ao buscar horários:", erro.message);
+    // Se der erro, retorna TODOS os horários como disponíveis
+    res.json({
+      todos: todosHorarios,
+      ocupados: [],
+      disponiveis: todosHorarios
+    });
+  }
+});
+
+// ==================================================
 // 📅 ROTAS DE AGENDAMENTOS (com VALIDAÇÃO DE HORÁRIO)
 // ==================================================
 app.post('/api/agendamentos', async (req, res) => {
@@ -103,7 +146,7 @@ app.get('/api/agendamentos', async (req, res) => {
 });
 
 // ==================================================
-// 🔐 SISTEMA DE LOGIN E CADASTRO (mantido funcionando)
+// 🔐 SISTEMA DE LOGIN E CADASTRO
 // ==================================================
 const USUARIO_BARBEIRO = {
   id: 1,
