@@ -18,7 +18,6 @@ const inicializarBanco = async () => {
         duracao_minutos INTEGER NOT NULL,
         valor DECIMAL(10,2) NOT NULL
       );
-
       CREATE TABLE IF NOT EXISTS agendamentos (
         id SERIAL PRIMARY KEY,
         nome_cliente VARCHAR(100) NOT NULL,
@@ -29,7 +28,6 @@ const inicializarBanco = async () => {
         barbeiro VARCHAR(100) NOT NULL,
         status VARCHAR(20) DEFAULT 'pendente'
       );
-
       CREATE TABLE IF NOT EXISTS usuarios (
         id SERIAL PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
@@ -37,7 +35,6 @@ const inicializarBanco = async () => {
         nome VARCHAR(100),
         criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
-
       CREATE TABLE IF NOT EXISTS recuperacao_senha (
         id SERIAL PRIMARY KEY,
         usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
@@ -45,13 +42,11 @@ const inicializarBanco = async () => {
         expira_em TIMESTAMP NOT NULL,
         usado BOOLEAN DEFAULT false
       );
-
       CREATE TABLE IF NOT EXISTS "session" (
         "sid" VARCHAR NOT NULL PRIMARY KEY,
         "sess" JSON NOT NULL,
         "expire" TIMESTAMP NOT NULL
       );
-
       INSERT INTO servicos (nome, duracao_minutos, valor)
       VALUES
         ('Corte social', 30, 25.00),
