@@ -2,13 +2,26 @@ const { pool, inicializarBanco } = require('./db');
 inicializarBanco();
 const express = require('express');
 const cors = require('cors');
+const path = require('path'); // ✅ Adicionado
 require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 54321;
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
-app.use(express.static('../frontend'));
+
+// ✅ CORRIGIDO: Aponta para a pasta frontend corretamente
+app.use(express.static(path.join(__dirname, '../frontend')));
+
+// ✅ Rota raiz carrega index.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/index.html'));
+});
+
+// ✅ Rota para as páginas dentro de /paginas/
+app.get('/paginas/:pagina', (req, res) => {
+  res.sendFile(path.join(__dirname, `../frontend/paginas/${req.params.pagina}`));
+});
 
 // ==================================================
 // 🧪 TESTE DE CONEXÃO
@@ -68,7 +81,6 @@ app.post('/api/agendamentos', async (req, res) => {
   }
 
   try {
-    // Verifica se horário está ocupado
     const ocupado = await pool.query(
       "SELECT * FROM agendamentos WHERE data_agendamento = $1 AND horario = $2",
       [data_agendamento, horario_inicio]
@@ -77,22 +89,13 @@ app.post('/api/agendamentos', async (req, res) => {
       return res.status(409).json({ sucesso: false, mensagem: "❌ Esse horário JÁ ESTÁ AGENDADO!" });
     }
 
-    // Pega o primeiro serviço da lista
     const primeiroServico = lista_servicos[0];
     const servico_id = primeiroServico?.id || 1;
 
-    // Salva no banco
     const novo = await pool.query(
       `INSERT INTO agendamentos (nome_cliente, telefone, servico_id, data_agendamento, horario, barbeiro)
        VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [
-        nome_cliente,
-        telefone || 'Não informado',
-        servico_id,
-        data_agendamento,
-        horario_inicio,
-        barbeiro || 'Barbeiro Eduardo'
-      ]
+      [nome_cliente, telefone || 'Não informado', servico_id, data_agendamento, horario_inicio, barbeiro || 'Barbeiro Eduardo']
     );
 
     res.status(201).json({ sucesso: true, mensagem: "✅ Agendamento CONFIRMADO!", agendamento: novo.rows[0] });
@@ -157,7 +160,6 @@ app.post('/api/login', async (req, res) => {
   const { email, senha } = req.body;
   const emailLower = email.toLowerCase();
 
-  // Login do Barbeiro
   if (USUARIO_BARBEIRO.email.toLowerCase() === emailLower && USUARIO_BARBEIRO.senha === senha) {
     SESSAO.logado = true;
     SESSAO.usuario = { 
@@ -170,19 +172,12 @@ app.post('/api/login', async (req, res) => {
     return res.json({ ok: true, usuario: SESSAO.usuario });
   }
 
-  // Login do Cliente
   try {
     const resultado = await pool.query("SELECT id, email, nome, senha_hash FROM usuarios WHERE email = $1", [emailLower]);
     if (resultado.rows.length > 0 && resultado.rows[0].senha_hash === senha) {
       const u = resultado.rows[0];
       SESSAO.logado = true;
-      SESSAO.usuario = { 
-        id: u.id, 
-        email: u.email, 
-        nome: u.nome, 
-        telefone: '', 
-        is_barbeiro: false 
-      };
+      SESSAO.usuario = { id: u.id, email: u.email, nome: u.nome, telefone: '', is_barbeiro: false };
       return res.json({ ok: true, usuario: SESSAO.usuario });
     }
     return res.status(401).json({ erro: 'Credenciais inválidas' });
