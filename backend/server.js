@@ -40,7 +40,8 @@ app.get("/api/teste-banco", async (req, res) => {
 // ==================================================
 app.get('/api/servicos', async (req, res) => {
   try {
-    const resultado = await pool.query("SELECT DISTINCT ON (nome) * FROM servicos ORDER BY nome, id");
+    // Pega os 7 serviços oficiais sem duplicatas
+    const resultado = await pool.query("SELECT * FROM servicos WHERE id BETWEEN 1 AND 7 ORDER BY id");
     res.json(resultado.rows);
   } catch (erro) {
     res.status(500).json({ erro: erro.message });

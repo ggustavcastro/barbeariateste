@@ -1,5 +1,6 @@
 const { Pool } = require('pg');
 require('dotenv').config();
+
 const isProduction = !!process.env.DATABASE_URL;
 
 const pool = new Pool({
@@ -13,7 +14,7 @@ const inicializarBanco = async () => {
     await client.query(`
       CREATE TABLE IF NOT EXISTS servicos (
         id SERIAL PRIMARY KEY,
-        nome VARCHAR(100) NOT NULL UNIQUE,
+        nome VARCHAR(100) NOT NULL,
         duracao_minutos INTEGER NOT NULL,
         valor DECIMAL(10,2) NOT NULL
       );
@@ -34,20 +35,34 @@ const inicializarBanco = async () => {
         nome VARCHAR(100),
         criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
-      INSERT INTO servicos (nome, duracao_minutos, valor)
+      CREATE TABLE IF NOT EXISTS recuperacao_senha (
+        id SERIAL PRIMARY KEY,
+        usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+        token VARCHAR(255) UNIQUE NOT NULL,
+        expira_em TIMESTAMP NOT NULL,
+        usado BOOLEAN DEFAULT false
+      );
+      CREATE TABLE IF NOT EXISTS "session" (
+        "sid" VARCHAR NOT NULL PRIMARY KEY,
+        "sess" JSON NOT NULL,
+        "expire" TIMESTAMP NOT NULL
+      );
+
+      -- Insere serviços usando ID (chave primária) no ON CONFLICT
+      INSERT INTO servicos (id, nome, duracao_minutos, valor)
       VALUES
-        ('Corte social', 30, 25.00),
-        ('Degrade social', 30, 30.00),
-        ('Degrade navalhado', 40, 35.00),
-        ('Sobrancelha', 10, 10.00),
-        ('Bigode', 5, 5.00),
-        ('Cavanhaque', 5, 5.00),
-        ('Barba', 30, 25.00)
-      ON CONFLICT (nome) DO NOTHING;
+        (1, 'Corte social', 30, 25.00),
+        (2, 'Degrade social', 30, 30.00),
+        (3, 'Degrade navalhado', 40, 35.00),
+        (4, 'Sobrancelha', 10, 10.00),
+        (5, 'Bigode', 5, 5.00),
+        (6, 'Cavanhaque', 5, 5.00),
+        (7, 'Barba', 30, 25.00)
+      ON CONFLICT (id) DO NOTHING;
     `);
-    console.log('✅ Banco inicializado!');
+    console.log('✅ Banco inicializado com sucesso! Tabelas prontas!');
   } catch (err) {
-    console.error('❌ Erro banco:', err);
+    console.error('❌ Erro ao inicializar banco:', err);
   } finally {
     client.release();
   }
