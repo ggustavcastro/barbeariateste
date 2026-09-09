@@ -4,56 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agendar - Corte & Estilo</title>
-    <!-- ✅ CERTO: com ../ -->
+    <!-- ✅ SÓ TROQUEI AQUI: adicionado ../ -->
     <link rel="stylesheet" href="../style.css?v=102">
 </head>
 <body>
 
-    <!-- ✅ MENU DE NAVEGAÇÃO (igual na página inicial) -->
-    <header class="navbar">
-        <h1 class="logo">CORTE & ESTILO</h1>
-        <nav>
-            <a href="../index.html">Início</a>
-            <a href="agendar.html">Agendar</a>
-            <a href="login.html">Entrar</a>
-        </nav>
-    </header>
+<section class="pagina-formulario">
+  <div class="caixa-formulario">
+    <h2>Agendar Atendimento</h2>
+    <form id="form-agendar">
+      <p style="margin-bottom:1rem; color:#94a3b8;">Agendando como: <strong id="nome-usuario"></strong></p>
+      <div id="area-procedimentos">
+        <div class="linha-procedimento">
+          <label>Procedimento:</label>
+          <select id="servico" name="servico">
+            <option value="">Selecione um serviço...</option>
+          </select>
+        </div>
+        <div id="procedimentos-adicionados"></div>
+        <button type="button" id="btn-adicionar" style="margin:0.8rem 0; padding:0.5rem 1rem; background:#4f46e5; color:white; border:none; border-radius:6px; cursor:pointer;">➕ Adicionar Procedimento</button>
+      </div>
+      <label>Data:</label>
+      <input type="date" id="data_agendamento" name="data_agendamento" 
+           onkeydown="return false" onclick="this.showPicker()" required>
+      <label>Horário de início:</label>
+      <select id="horario" name="horario" required>
+        <option value="">Selecione um horário...</option>
+      </select>
+      <p style="color:#94a3b8; font-size:0.9rem; margin-top:0.5rem;">
+        Duração total: <strong id="duracao-total">0 min</strong> | 
+        Término previsto: <strong id="horario-termino">--:--</strong>
+      </p>
+      <button type="submit" id="btn-agendar">✅ Confirmar Agendamento</button>
+    </form>
+    <div class="link"><a href="#/" onclick="navegar('/')">← Voltar para a página inicial</a></div>
+  </div>
+</section>
 
-    <main>
-        <!-- ✅ SEU CONTEÚDO ORIGINAL AQUI -->
-        <section class="pagina-formulario">
-          <div class="caixa-formulario">
-            <h2>Agendar Atendimento</h2>
-            <form id="form-agendar">
-              <p style="margin-bottom:1rem; color:#94a3b8;">Agendando como: <strong id="nome-usuario"></strong></p>
-              <div id="area-procedimentos">
-                <div class="linha-procedimento">
-                  <label>Procedimento:</label>
-                  <select id="servico" name="servico">
-                    <option value="">Selecione um serviço...</option>
-                  </select>
-                </div>
-                <div id="procedimentos-adicionados"></div>
-                <button type="button" id="btn-adicionar" style="margin:0.8rem 0; padding:0.5rem 1rem; background:#4f46e5; color:white; border:none; border-radius:6px; cursor:pointer;">➕ Adicionar Procedimento</button>
-              </div>
-              <label>Data:</label>
-              <input type="date" id="data_agendamento" name="data_agendamento" 
-                   onkeydown="return false" onclick="this.showPicker()" required>
-              <label>Horário de início:</label>
-              <select id="horario" name="horario" required>
-                <option value="">Selecione um horário...</option>
-              </select>
-              <p style="color:#94a3b8; font-size:0.9rem; margin-top:0.5rem;">
-                Duração total: <strong id="duracao-total">0 min</strong> | 
-                Término previsto: <strong id="horario-termino">--:--</strong>
-              </p>
-              <button type="submit" id="btn-agendar">✅ Confirmar Agendamento</button>
-            </form>
-            <div class="link"><a href="../index.html">← Voltar para a página inicial</a></div>
-          </div>
-        </section>
-    </main>
-
-    <script src="../app.js"></script>
+<script src="../app.js"></script>
 </body>
 </html>
