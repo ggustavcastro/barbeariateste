@@ -11,15 +11,27 @@
     --ouro: #ffb703;
     --branco: #ffffff;
     --cinza: #1e293b;
-    --erro: #ef4444;
-    --sucesso: #10b981;
 }
 
 body {
-    background-color: var(--preto);
+    /* ✅ NOME EXATO DA SUA IMAGEM */
+    background: url('Gemini_Generated_Image_pbrcbipbrcbipbrc.jfif') no-repeat center center fixed;
+    background-size: cover;
     color: var(--branco);
     line-height: 1.6;
     padding-top: 80px;
+}
+
+/* Camada escura para o texto ficar legível sobre a imagem */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.55);
+    z-index: -1;
 }
 
 .navbar {
@@ -38,7 +50,6 @@ body {
     font-size: 1.5rem;
     font-weight: bold;
     color: var(--ouro);
-    cursor: pointer;
 }
 
 .navbar nav a {
@@ -46,7 +57,6 @@ body {
     text-decoration: none;
     margin-left: 2rem;
     font-weight: 500;
-    transition: color 0.2s;
 }
 
 .navbar nav a:hover {
@@ -67,7 +77,7 @@ h2 {
 
 p {
     margin-bottom: 2rem;
-    color: #cbd5e1;
+    color: #e2e8f0;
 }
 
 .btn {
@@ -88,40 +98,6 @@ p {
     transform: translateY(-2px);
 }
 
-form {
-    background-color: var(--cinza);
-    padding: 2rem;
-    border-radius: 10px;
-    max-width: 500px;
-}
-
-form label {
-    display: block;
-    margin: 1rem 0 0.3rem;
-    color: #e2e8f0;
-}
-
-form input, form select {
-    width: 100%;
-    padding: 0.7rem;
-    border: none;
-    border-radius: 5px;
-    background-color: #334155;
-    color: white;
-    font-size: 1rem;
-}
-
-form button {
-    margin-top: 1.5rem;
-    width: 100%;
-}
-
-.voltar {
-    display: inline-block;
-    margin-top: 1rem;
-    color: var(--azul);
-    text-decoration: none;
-}
 .destaque {
     text-align: center;
     padding: 3rem 0 4rem;
@@ -149,11 +125,12 @@ form button {
 }
 
 .servico-card {
-    background-color: var(--cinza);
+    background-color: rgba(30, 41, 59, 0.85);
     padding: 1.5rem;
     border-radius: 10px;
     text-align: center;
     transition: transform 0.2s;
+    backdrop-filter: blur(4px);
 }
 
 .servico-card:hover {
@@ -173,10 +150,11 @@ form button {
 }
 
 .contato {
-    background-color: var(--cinza);
+    background-color: rgba(30, 41, 59, 0.85);
     padding: 2rem;
     border-radius: 10px;
     margin-top: 3rem;
+    backdrop-filter: blur(4px);
 }
 
 .contato h2 {
