@@ -1,14 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrar - Corte & Estilo</title>
+    <link rel="stylesheet" href="../style.css?v=105">
+</head>
+<body>
+
+<script src="../app.js"></script>
+
 <section class="pagina-formulario">
   <div class="caixa-formulario">
-    <link rel="stylesheet" href="../style.css?v=102">
     <h2>Entrar</h2>
     <form id="form-login">
       <label>E-mail:</label>
       <input type="email" name="email" required>
-
       <label>Senha:</label>
       <input type="password" name="senha" required>
-
       <button type="submit">Entrar</button>
     </form>
     <div class="link">
@@ -18,3 +27,34 @@
     </div>
   </div>
 </section>
+
+<script>
+// ✅ ENVIA DADOS DE FORMA SEGURA — SEM APARECER NA URL
+document.getElementById('form-login').addEventListener('submit', async (e) => {
+  e.preventDefault(); // ❌ IMPEDIR de enviar pela URL!
+
+  const email = e.target.email.value;
+  const senha = e.target.senha.value;
+
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, senha }) // ✅ DADOS PROTEGIDOS NO CORPO
+    });
+
+    const dados = await res.json();
+
+    if (dados.sucesso) {
+      navegar('/agendar'); // ✅ VAI PARA AGENDAR — SEM DADOS NA URL
+    } else {
+      alert('E-mail ou senha incorretos!');
+    }
+  } catch (erro) {
+    alert('Erro ao fazer login! Tente novamente.');
+  }
+});
+</script>
+
+</body>
+</html>
